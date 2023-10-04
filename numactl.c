@@ -59,6 +59,7 @@ static struct option opts[] = {
 	{"shmid", 1, 0, 'I'},
 	{"huge", 0, 0, 'u'},
 	{"touch", 0, 0, 'T'},
+	{"weights", 0, 0, 'w'},
 	{"verify", 0, 0, 'V'}, /* undocumented - for debugging */
 	{ 0 }
 };
@@ -69,6 +70,7 @@ static void usage(void)
 		"usage: numactl [--all | -a] [--balancing | -b] [--interleave= | -i <nodes>]\n"
 		"		[--preferred= | -p <node>] [--preferred-many= | -P <nodes>]\n"
 		"               [--physcpubind= | -C <cpus>] [--cpunodebind= | -N <nodes>]\n"
+		"               [--weights | -w]\n"
 		"               [--membind= | -m <nodes>] [--localalloc | -l] command args ...\n"
 		"               [--localalloc | -l] command args ...\n"
 		"       numactl [--show | -s]\n"
@@ -433,6 +435,7 @@ int main(int ac, char **av)
 	int do_dump = 0;
 	int parse_all = 0;
 	int numa_balancing = 0;
+	int do_weights = 0;
 
 	get_short_opts(opts,shortopts);
 	while ((c = getopt_long(ac, av, shortopts, opts, NULL)) != -1) {
@@ -461,7 +464,10 @@ int main(int ac, char **av)
 
 			errno = 0;
 			did_node_cpu_parse = 1;
-			setpolicy(MPOL_INTERLEAVE);
+			if (do_weights)
+				setpolicy(MPOL_INTERLEAVE | MPOL_F_WEIGHTED_INTERLEAVE);
+			else
+				setpolicy(MPOL_INTERLEAVE);
 			if (shmfd >= 0)
 				numa_interleave_memory(shmptr, shmlen, mask);
 			else
@@ -638,6 +644,10 @@ int main(int ac, char **av)
 			needshm("--touch");
 			check_shmbeyond("--touch");
 			numa_police_memory(shmptr, shmlen);
+			break;
+
+		case 'w': /* --weight */
+			do_weights = 1;
 			break;
 
 		case 'V': /* --verify */
