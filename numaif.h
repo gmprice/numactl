@@ -28,10 +28,10 @@ extern long move_pages(int pid, unsigned long count,
 #define MPOL_INTERLEAVE  3
 #define MPOL_LOCAL       4
 #define MPOL_PREFERRED_MANY   5
-#define MPOL_MAX         6
+#define MPOL_WEIGHTED_INTERLEAVE   6
+#define MPOL_MAX         7
 
 /* Flags for set_mempolicy, specified in mode */
-#define MPOL_F_WEIGHTED_INTERLEAVE (1 << 12) /* interleave w/ memtier weights */
 #define MPOL_F_NUMA_BALANCING	(1 << 13) /* Optimize with NUMA balancing if possible */
 #define MPOL_F_RELATIVE_NODES (1 << 14)
 #define MPOL_F_STATIC_NODES (1 << 15)
