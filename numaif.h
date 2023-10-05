@@ -25,10 +25,10 @@ extern long move_pages(int pid, unsigned long count,
 #define MPOL_DEFAULT     0
 #define MPOL_PREFERRED   1
 #define MPOL_BIND        2
-#define MPOL_INTERLEAVE  3
+#define MPOL_INTERLEAVE  6 /* Hack: Replace with WEIGHTED_INTERLEAVE */
 #define MPOL_LOCAL       4
 #define MPOL_PREFERRED_MANY   5
-#define MPOL_MAX         6
+#define MPOL_MAX         7
 
 /* Flags for set_mempolicy, specified in mode */
 #define MPOL_F_NUMA_BALANCING	(1 << 13) /* Optimize with NUMA balancing if possible */
