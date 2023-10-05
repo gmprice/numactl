@@ -37,6 +37,7 @@ int exitcode;
 static struct option opts[] = {
 	{"all", 0, 0, 'a'},
 	{"interleave", 1, 0, 'i' },
+	{"weights", 1, 0, 'w'},
 	{"preferred", 1, 0, 'p' },
 	{"preferred-many", 1, 0, 'P' },
 	{"cpubind", 1, 0, 'c' },
@@ -59,7 +60,6 @@ static struct option opts[] = {
 	{"shmid", 1, 0, 'I'},
 	{"huge", 0, 0, 'u'},
 	{"touch", 0, 0, 'T'},
-	{"weights", 0, 0, 'w'},
 	{"verify", 0, 0, 'V'}, /* undocumented - for debugging */
 	{ 0 }
 };
@@ -435,7 +435,6 @@ int main(int ac, char **av)
 	int do_dump = 0;
 	int parse_all = 0;
 	int numa_balancing = 0;
-	int do_weights = 0;
 
 	get_short_opts(opts,shortopts);
 	while ((c = getopt_long(ac, av, shortopts, opts, NULL)) != -1) {
@@ -464,16 +463,35 @@ int main(int ac, char **av)
 
 			errno = 0;
 			did_node_cpu_parse = 1;
-			if (do_weights)
-				setpolicy(MPOL_INTERLEAVE | MPOL_F_WEIGHTED_INTERLEAVE);
-			else
-				setpolicy(MPOL_INTERLEAVE);
+			setpolicy(MPOL_INTERLEAVE);
 			if (shmfd >= 0)
 				numa_interleave_memory(shmptr, shmlen, mask);
 			else
 				numa_set_interleave_mask(mask);
 			checkerror("setting interleave mask");
 			break;
+
+		case 'w': /* --weight */
+			checknuma();
+			if (parse_all)
+				mask = numactl_parse_nodestring(optarg, ALL);
+			else
+				mask = numactl_parse_nodestring(optarg, CPUSET);
+			if (!mask) {
+				printf ("<%s> is invalid\n", optarg);
+				usage();
+			}
+
+			errno = 0;
+			did_node_cpu_parse = 1;
+			setpolicy(MPOL_WEIGHTED_INTERLEAVE);
+			if (shmfd >= 0)
+				numa_interleave_memory(shmptr, shmlen, mask);
+			else
+				numa_set_interleave_mask(mask);
+			checkerror("setting interleave mask");
+			break;
+
 		case 'N': /* --cpunodebind */
 		case 'c': /* --cpubind */
 			dontshm("-c/--cpubind/--cpunodebind");
@@ -644,10 +662,6 @@ int main(int ac, char **av)
 			needshm("--touch");
 			check_shmbeyond("--touch");
 			numa_police_memory(shmptr, shmlen);
-			break;
-
-		case 'w': /* --weight */
-			do_weights = 1;
 			break;
 
 		case 'V': /* --verify */
