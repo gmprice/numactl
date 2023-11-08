@@ -37,6 +37,7 @@ int exitcode;
 static struct option opts[] = {
 	{"all", 0, 0, 'a'},
 	{"interleave", 1, 0, 'i' },
+	{"weighted", 0, 0, 'w' },
 	{"preferred", 1, 0, 'p' },
 	{"preferred-many", 1, 0, 'P' },
 	{"cpubind", 1, 0, 'c' },
@@ -433,6 +434,7 @@ int main(int ac, char **av)
 	int do_dump = 0;
 	int parse_all = 0;
 	int numa_balancing = 0;
+	int weighted_interleave = 0;
 
 	get_short_opts(opts,shortopts);
 	while ((c = getopt_long(ac, av, shortopts, opts, NULL)) != -1) {
@@ -448,6 +450,9 @@ int main(int ac, char **av)
 			nopolicy();
 			numa_balancing = 1;
 			break;
+		case 'w': /* --weighted */
+			nopolicy();
+			weighted_interleave = 1;
 		case 'i': /* --interleave */
 			checknuma();
 			if (parse_all)
@@ -461,7 +466,10 @@ int main(int ac, char **av)
 
 			errno = 0;
 			did_node_cpu_parse = 1;
-			setpolicy(MPOL_INTERLEAVE);
+			if (weighted_interleave)
+				setpolicy(MPOL_INTERLEAVE | MPOL_F_IL_WEIGHTING);
+			else
+				setpolicy(MPOL_INTERLEAVE);
 			if (shmfd >= 0)
 				numa_interleave_memory(shmptr, shmlen, mask);
 			else
